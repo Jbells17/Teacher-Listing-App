@@ -1,0 +1,668 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Clear Grading">
+    <title>Clear Grading To-Do</title>
+    
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="manifest.json">
+    
+    <!-- Apple Touch Icons -->
+    <link rel="apple-touch-icon" sizes="180x180" href="icon-180.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="icon-32.png">
+    
+    <style>
+        :root {
+            --bg: #0B0B10;
+            --card: #15151C;
+            --text: #EAEAEE;
+            --muted: #9AA0A6;
+            --accent: #7C4DFF;
+            --accent-2: #B388FF;
+            --danger: #EF5350;
+            --green: #4CAF50;
+            --safe-area-inset-top: env(safe-area-inset-top);
+            --safe-area-inset-bottom: env(safe-area-inset-bottom);
+        }
+
+        * { 
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+            -webkit-touch-callout: none;
+            -webkit-user-select: none;
+            user-select: none;
+        }
+
+        html, body {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            background: var(--bg);
+            color: var(--text);
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            overflow: hidden;
+        }
+
+        .app-container {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            padding-top: var(--safe-area-inset-top);
+        }
+
+        header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 16px;
+            background: linear-gradient(90deg, var(--accent) 0%, var(--accent-2) 100%);
+            color: white;
+            flex-shrink: 0;
+        }
+
+        header .left {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        header h1 {
+            font-size: 18px;
+            margin: 0;
+            font-weight: 700;
+        }
+
+        .logo {
+            width: 24px;
+            height: 24px;
+        }
+
+        header .right {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        #listSelect {
+            background: rgba(255,255,255,0.15);
+            border: none;
+            color: white;
+            padding: 8px 12px;
+            border-radius: 10px;
+            font-size: 14px;
+            min-width: 120px;
+        }
+
+        .icon-btn {
+            border: none;
+            background: rgba(255,255,255,0.2);
+            color: white;
+            border-radius: 10px;
+            width: 36px;
+            height: 36px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 20px;
+        }
+
+        /* Badge toggle switch */
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 51px;
+            height: 28px;
+        }
+
+        .switch input {
+            display: none;
+        }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(255,255,255,0.25);
+            transition: .3s;
+            border-radius: 28px;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 22px;
+            width: 22px;
+            left: 3px;
+            bottom: 3px;
+            background-color: white;
+            transition: .3s;
+            border-radius: 50%;
+        }
+
+        .switch input:checked + .slider {
+            background-color: rgba(0,0,0,0.2);
+        }
+
+        .switch input:checked + .slider:before {
+            transform: translateX(23px);
+        }
+
+        main {
+            flex: 1;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            padding: 16px;
+        }
+
+        #addForm {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 16px;
+            flex-shrink: 0;
+        }
+
+        #newItem {
+            flex: 1;
+            border-radius: 12px;
+            border: 1px solid #2A2A33;
+            background: var(--card);
+            color: var(--text);
+            padding: 14px 16px;
+            font-size: 16px;
+            outline: none;
+            -webkit-appearance: none;
+        }
+
+        #newItem:focus {
+            border-color: var(--accent);
+        }
+
+        #addBtn {
+            border: none;
+            background: var(--accent);
+            color: white;
+            border-radius: 12px;
+            padding: 0 20px;
+            font-weight: 700;
+            cursor: pointer;
+            font-size: 16px;
+        }
+
+        .todo-list {
+            list-style: none;
+            margin: 0;
+            padding: 0;
+            flex: 1;
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+            padding-bottom: 20px;
+        }
+
+        .item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 14px 16px;
+            background: var(--card);
+            border: 1px solid #23232C;
+            border-radius: 14px;
+            margin-bottom: 8px;
+            transition: transform 0.2s ease, opacity 0.2s ease;
+        }
+
+        .item.done {
+            opacity: 0.7;
+        }
+
+        .checkbox {
+            width: 24px;
+            height: 24px;
+            border-radius: 8px;
+            border: 2px solid #3A3A44;
+            cursor: pointer;
+            position: relative;
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .checkbox input {
+            display: none;
+        }
+
+        .checkbox .checkmark {
+            width: 14px;
+            height: 14px;
+            border-radius: 4px;
+            background: var(--green);
+            transform: scale(0);
+            transition: transform 0.2s ease;
+        }
+
+        .item.done .checkbox {
+            border-color: var(--green);
+            background: rgba(76,175,80,0.12);
+        }
+
+        .item.done .checkbox .checkmark {
+            transform: scale(1);
+        }
+
+        .text {
+            flex: 1;
+            font-size: 16px;
+            padding: 4px 0;
+            outline: none;
+            -webkit-user-select: text;
+            user-select: text;
+        }
+
+        .item.done .text {
+            color: var(--muted);
+            text-decoration: line-through;
+        }
+
+        .delete {
+            border: none;
+            background: transparent;
+            color: var(--danger);
+            font-size: 18px;
+            cursor: pointer;
+            padding: 8px;
+        }
+
+        .footer {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 16px;
+            border-top: 1px solid #23232C;
+            font-size: 14px;
+            color: var(--muted);
+            flex-shrink: 0;
+            padding-bottom: calc(12px + var(--safe-area-inset-bottom));
+        }
+
+        .footer button {
+            background: transparent;
+            border: none;
+            color: #AAB0FF;
+            cursor: pointer;
+            padding: 6px 10px;
+            border-radius: 8px;
+            font-size: 14px;
+        }
+
+        #confettiLayer {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            pointer-events: none;
+            z-index: 1000;
+        }
+
+        .confetti-piece {
+            position: absolute;
+            width: 8px;
+            height: 12px;
+            border-radius: 2px;
+            animation: fall 1.5s ease-out forwards;
+        }
+
+        @keyframes fall {
+            to {
+                transform: translateY(100vh) rotate(360deg);
+                opacity: 0;
+            }
+        }
+
+        /* iOS-specific optimizations */
+        @supports (-webkit-touch-callout: none) {
+            input, textarea, [contenteditable] {
+                font-size: 16px !important;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <header>
+            <div class="left">
+                <svg class="logo" viewBox="0 0 24 24" fill="white">
+                    <path d="M9 16.2L4.8 12l-1.4 1.4L9 19 21 7l-1.4-1.4L9 16.2z"/>
+                </svg>
+                <h1>Clear Grading</h1>
+            </div>
+            <div class="right">
+                <select id="listSelect"></select>
+                <button class="icon-btn" id="addListBtn">+</button>
+                <label class="switch" title="Show badge count">
+                    <input type="checkbox" id="badgeToggle" checked>
+                    <span class="slider"></span>
+                </label>
+            </div>
+        </header>
+
+        <main>
+            <form id="addForm">
+                <input id="newItem" type="text" placeholder="Add to-do (x# to repeat)" autocomplete="off">
+                <button id="addBtn" type="submit">Add</button>
+            </form>
+
+            <ul id="todoList" class="todo-list"></ul>
+        </main>
+
+        <div class="footer">
+            <button id="clearDoneBtn">Clear completed</button>
+            <span id="counts"></span>
+        </div>
+    </div>
+
+    <div id="confettiLayer"></div>
+
+    <script>
+        // Check for badge API support
+        const badgeAPISupported = 'setAppBadge' in navigator;
+        
+        // Service Worker Registration
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('sw.js').then(registration => {
+                console.log('Service Worker registered');
+            }).catch(error => {
+                console.log('Service Worker registration failed:', error);
+            });
+        }
+
+        // App State
+        let state = {
+            lists: [],
+            currentListId: null,
+            badgeEnabled: true
+        };
+
+        // Storage
+        function save() {
+            localStorage.setItem('todoState', JSON.stringify(state));
+            updateBadge();
+        }
+
+        function load() {
+            const saved = localStorage.getItem('todoState');
+            if (saved) {
+                state = JSON.parse(saved);
+            } else {
+                // Default list
+                state.lists = [{
+                    id: crypto.randomUUID(),
+                    name: 'My List',
+                    items: []
+                }];
+                state.currentListId = state.lists[0].id;
+                save();
+            }
+            
+            document.getElementById('badgeToggle').checked = state.badgeEnabled !== false;
+            renderListsDropdown();
+            renderItems();
+            updateCounts();
+            updateBadge();
+        }
+
+        function currentList() {
+            return state.lists.find(l => l.id === state.currentListId);
+        }
+
+        // Badge Management
+        async function updateBadge() {
+            const list = currentList();
+            if (!list) return;
+            
+            const remaining = list.items.filter(i => !i.done).length;
+            
+            if (!state.badgeEnabled) {
+                clearBadge();
+                return;
+            }
+            
+            // Try using the Badge API (works on iOS 16.4+ PWAs)
+            if (badgeAPISupported) {
+                try {
+                    if (remaining > 0) {
+                        await navigator.setAppBadge(remaining);
+                    } else {
+                        await navigator.clearAppBadge();
+                    }
+                } catch (error) {
+                    console.log('Badge API error:', error);
+                }
+            }
+        }
+
+        async function clearBadge() {
+            if (badgeAPISupported) {
+                try {
+                    await navigator.clearAppBadge();
+                } catch (error) {
+                    console.log('Clear badge error:', error);
+                }
+            }
+        }
+
+        // UI Rendering
+        function renderListsDropdown() {
+            const select = document.getElementById('listSelect');
+            select.innerHTML = '';
+            state.lists.forEach(list => {
+                const option = document.createElement('option');
+                option.value = list.id;
+                option.textContent = list.name;
+                select.appendChild(option);
+            });
+            if (state.currentListId) {
+                select.value = state.currentListId;
+            }
+        }
+
+        function renderItems() {
+            const todoList = document.getElementById('todoList');
+            const list = currentList();
+            if (!list) return;
+
+            todoList.innerHTML = '';
+            list.items.forEach(item => {
+                const li = document.createElement('li');
+                li.className = 'item' + (item.done ? ' done' : '');
+                li.dataset.id = item.id;
+                
+                li.innerHTML = `
+                    <label class="checkbox">
+                        <input type="checkbox" class="toggle" ${item.done ? 'checked' : ''}>
+                        <span class="checkmark"></span>
+                    </label>
+                    <div class="text" contenteditable="true">${item.text}</div>
+                    <button class="delete">✕</button>
+                `;
+                
+                todoList.appendChild(li);
+            });
+        }
+
+        function updateCounts() {
+            const list = currentList();
+            if (!list) return;
+            
+            const total = list.items.length;
+            const done = list.items.filter(i => i.done).length;
+            const remaining = total - done;
+            
+            document.getElementById('counts').textContent = 
+                `${remaining} remaining • ${done} done`;
+        }
+
+        function confetti(element) {
+            const colors = ['#7C4DFF', '#B388FF', '#4CAF50', '#FFC107'];
+            const confettiLayer = document.getElementById('confettiLayer');
+            const rect = element.getBoundingClientRect();
+            
+            for (let i = 0; i < 10; i++) {
+                const piece = document.createElement('div');
+                piece.className = 'confetti-piece';
+                piece.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+                piece.style.left = rect.left + rect.width / 2 + 'px';
+                piece.style.top = rect.top + 'px';
+                confettiLayer.appendChild(piece);
+                
+                setTimeout(() => piece.remove(), 1500);
+            }
+        }
+
+        // Event Listeners
+        document.getElementById('addForm').addEventListener('submit', (e) => {
+            e.preventDefault();
+            const input = document.getElementById('newItem');
+            const text = input.value.trim();
+            if (!text) return;
+            
+            const list = currentList();
+            const multiplyMatch = text.match(/^(.+?)\s*[x\*]\s*(\d+)$/i);
+            
+            if (multiplyMatch) {
+                const baseText = multiplyMatch[1].trim();
+                const count = Math.min(parseInt(multiplyMatch[2], 10), 200);
+                
+                for (let i = 0; i < count; i++) {
+                    list.items.unshift({
+                        id: crypto.randomUUID(),
+                        text: baseText,
+                        done: false,
+                        createdAt: Date.now() + i
+                    });
+                }
+            } else {
+                list.items.unshift({
+                    id: crypto.randomUUID(),
+                    text: text,
+                    done: false,
+                    createdAt: Date.now()
+                });
+            }
+            
+            input.value = '';
+            save();
+            renderItems();
+            updateCounts();
+        });
+
+        document.getElementById('todoList').addEventListener('click', (e) => {
+            const item = e.target.closest('.item');
+            if (!item) return;
+            
+            const list = currentList();
+            const itemData = list.items.find(i => i.id === item.dataset.id);
+            
+            if (e.target.classList.contains('toggle')) {
+                const wasUndone = !itemData.done;
+                itemData.done = !itemData.done;
+                itemData.doneAt = itemData.done ? Date.now() : undefined;
+                
+                // Sort: undone first, then by creation time
+                list.items.sort((a, b) => {
+                    if (a.done !== b.done) return a.done ? 1 : -1;
+                    return (a.createdAt || 0) - (b.createdAt || 0);
+                });
+                
+                save();
+                renderItems();
+                updateCounts();
+                
+                if (wasUndone && itemData.done) {
+                    confetti(item);
+                }
+            } else if (e.target.classList.contains('delete')) {
+                list.items = list.items.filter(i => i.id !== item.dataset.id);
+                save();
+                renderItems();
+                updateCounts();
+            }
+        });
+
+        document.getElementById('todoList').addEventListener('blur', (e) => {
+            if (!e.target.classList.contains('text')) return;
+            
+            const item = e.target.closest('.item');
+            const list = currentList();
+            const itemData = list.items.find(i => i.id === item.dataset.id);
+            itemData.text = e.target.textContent.trim();
+            save();
+        }, true);
+
+        document.getElementById('clearDoneBtn').addEventListener('click', () => {
+            const list = currentList();
+            list.items = list.items.filter(i => !i.done);
+            save();
+            renderItems();
+            updateCounts();
+        });
+
+        document.getElementById('listSelect').addEventListener('change', (e) => {
+            state.currentListId = e.target.value;
+            save();
+            renderItems();
+            updateCounts();
+        });
+
+        document.getElementById('addListBtn').addEventListener('click', () => {
+            const name = prompt('New list name:');
+            if (!name) return;
+            
+            const newList = {
+                id: crypto.randomUUID(),
+                name: name.trim(),
+                items: []
+            };
+            state.lists.push(newList);
+            state.currentListId = newList.id;
+            save();
+            renderListsDropdown();
+            renderItems();
+            updateCounts();
+        });
+
+        document.getElementById('badgeToggle').addEventListener('change', (e) => {
+            state.badgeEnabled = e.target.checked;
+            save();
+        });
+
+        // Initialize
+        load();
+
+        // Update badge when app becomes visible
+        document.addEventListener('visibilitychange', () => {
+            if (!document.hidden) {
+                updateBadge();
+            }
+        });
+
+        // Prevent bounce scrolling on iOS
+        document.addEventListener('touchmove', function(e) {
+            if (!e.target.closest('.todo-list')) {
+                e.preventDefault();
+            }
+        }, { passive: false });
+    </script>
+</body>
+</html>
