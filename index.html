@@ -9,11 +9,11 @@
     <title>Clear Grading To-Do</title>
     
     <!-- PWA Manifest -->
-    <link rel="manifest" href="manifest.json">
+    <link rel="manifest" href="./manifest.json">
     
     <!-- Apple Touch Icons -->
-    <link rel="apple-touch-icon" sizes="180x180" href="icon-180.png">
-    <link rel="icon" type="image/png" sizes="32x32" href="icon-32.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="./icon-180.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="./icon-32.png">
     
     <style>
         :root {
@@ -380,7 +380,7 @@
         
         // Service Worker Registration
         if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.register('sw.js').then(registration => {
+            navigator.serviceWorker.register('./sw.js').then(registration => {
                 console.log('Service Worker registered');
             }).catch(error => {
                 console.log('Service Worker registration failed:', error);

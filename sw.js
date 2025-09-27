@@ -1,9 +1,9 @@
 // sw.js - Service Worker for Clear Grading To-Do PWA
 const CACHE_NAME = 'grading-todo-v1';
 const urlsToCache = [
-    '/',
-    '/index.html',
-    '/manifest.json'
+    './',
+    './index.html',
+    './manifest.json'
 ];
 
 // Install event - cache resources
